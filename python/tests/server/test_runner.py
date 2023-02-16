@@ -39,14 +39,16 @@ def runner():
 
 
 def test_prediction_runner_setup(runner):
-    status, logs = runner.setup()
+    result = runner.setup().get(0.5)
 
-    assert status == Status.SUCCEEDED
-    assert logs == ""
+    assert result["status"] == Status.SUCCEEDED
+    assert result["logs"] == ""
+    assert isinstance(result["started_at"], datetime)
+    assert isinstance(result["completed_at"], datetime)
 
 
 def test_prediction_runner(runner):
-    runner.setup()
+    runner.setup().get(0.5)
     request = PredictionRequest(input={"sleep": 0.1})
     _, async_result = runner.predict(request)
     response = async_result.get(timeout=1)
@@ -59,7 +61,7 @@ def test_prediction_runner(runner):
 
 
 def test_prediction_runner_called_while_busy(runner):
-    runner.setup()
+    runner.setup().get(0.5)
     request = PredictionRequest(input={"sleep": 0.1})
     runner.predict(request)
 
@@ -69,7 +71,7 @@ def test_prediction_runner_called_while_busy(runner):
 
 
 def test_prediction_runner_called_while_busy_idempotent(runner):
-    runner.setup()
+    runner.setup().get(0.5)
     request = PredictionRequest(id="abcd1234", input={"sleep": 0.1})
 
     runner.predict(request)
@@ -83,7 +85,7 @@ def test_prediction_runner_called_while_busy_idempotent(runner):
 
 
 def test_prediction_runner_called_while_busy_idempotent_wrong_id(runner):
-    runner.setup()
+    runner.setup().get(0.5)
     request1 = PredictionRequest(id="abcd1234", input={"sleep": 0.1})
     request2 = PredictionRequest(id="5678efgh", input={"sleep": 0.1})
 
@@ -98,7 +100,7 @@ def test_prediction_runner_called_while_busy_idempotent_wrong_id(runner):
 
 
 def test_prediction_runner_cancel(runner):
-    runner.setup()
+    runner.setup().get(0.5)
     request = PredictionRequest(input={"sleep": 0.5})
     _, async_result = runner.predict(request)
 
@@ -114,7 +116,7 @@ def test_prediction_runner_cancel(runner):
 
 
 def test_prediction_runner_cancel_matching_id(runner):
-    runner.setup()
+    runner.setup().get(0.5)
     request = PredictionRequest(id="abcd1234", input={"sleep": 0.5})
     _, async_result = runner.predict(request)
 
@@ -126,7 +128,7 @@ def test_prediction_runner_cancel_matching_id(runner):
 
 
 def test_prediction_runner_cancel_by_mismatched_id(runner):
-    runner.setup()
+    runner.setup().get(0.5)
     request = PredictionRequest(id="abcd1234", input={"sleep": 0.5})
     _, async_result = runner.predict(request)
 
